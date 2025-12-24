@@ -1,8 +1,32 @@
 {
   "$schema": "https://json.schemastore.org/nest-cli",
   "collection": "@nestjs/schematics",
-  "sourceRoot": "src",
+  "sourceRoot": "apps/ponger/src",
   "compilerOptions": {
-    "deleteOutDir": true
+    "deleteOutDir": true,
+    "webpack": true,
+    "tsConfigPath": "apps/ponger/tsconfig.app.json"
+  },
+  "monorepo": true,
+  "root": "apps/ponger",
+  "projects": {
+    "pinger": {
+      "type": "application",
+      "root": "apps/pinger",
+      "entryFile": "main",
+      "sourceRoot": "apps/pinger/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/pinger/tsconfig.app.json"
+      }
+    },
+    "ponger": {
+      "type": "application",
+      "root": "apps/ponger",
+      "entryFile": "main",
+      "sourceRoot": "apps/ponger/src",
+      "compilerOptions": {
+        "tsConfigPath": "apps/ponger/tsconfig.app.json"
+      }
+    }
   }
 }
