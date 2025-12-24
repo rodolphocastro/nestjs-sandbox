@@ -10,6 +10,10 @@ export class PingsController {
   @Get()
   allPings() {
     this.logger.debug('fetching all pings');
-    return [];
+    return [
+      {
+        title: 'wow',
+      },
+    ];
   }
 }
