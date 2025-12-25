@@ -4,8 +4,9 @@ import {
 } from '@testcontainers/valkey';
 import Valkey from 'iovalkey';
 
-import { ValkeyPingsRepository } from './pings.repository';
+import { IPingsRepository, ValkeyPingsRepository } from './pings.repository';
 import { Ping } from './pings.entity';
+import { DuplicatedPingError, PingsService } from './pings.service';
 
 describe('PingsEntity', () => {
   it('should have a Title and a Creation Date', () => {
@@ -84,5 +85,69 @@ describe('PingsRepository', () => {
     await sut.insert(ping);
     const got = await sut.listAll();
     expect(got).toHaveLength(2);
+  });
+});
+
+describe('PingsService', () => {
+  let sut: PingsService;
+  let repo: IPingsRepository;
+
+  beforeEach(() => {
+    repo = {
+      insert: jest.fn(),
+      listAll: jest.fn(),
+    };
+    sut = new PingsService(repo);
+  });
+
+  describe('listing', () => {
+    it('should return no pings if the repo is empty', async () => {
+      repo.listAll = jest.fn().mockResolvedValue([]);
+      expect(await sut.getAllPings()).toHaveLength(0);
+    });
+
+    it('should return all pings if the repo is not empty', async () => {
+      repo.listAll = jest.fn().mockResolvedValue([{}]);
+      expect(await sut.getAllPings()).toHaveLength(1);
+    });
+
+    it('should throw an error if the repo throws', async () => {
+      repo.listAll = jest.fn().mockRejectedValue(new Error('boom'));
+      await expect(sut.getAllPings()).rejects.toThrow('boom');
+    });
+  });
+
+  describe('inserting', () => {
+    it('should insert if all is fine', async () => {
+      repo.listAll = jest.fn().mockResolvedValue([]);
+      const ping = {
+        Title: 'hello, world',
+        CreatedOn: new Date(),
+        IsAcknowledged: false,
+      };
+      await expect(sut.insertPing(ping)).resolves.not.toThrow();
+    });
+
+    it('should throw an error if the repo throws', async () => {
+      repo.listAll = jest.fn().mockRejectedValue(new Error('boom'));
+      const ping = {
+        Title: 'hello, world',
+        CreatedOn: new Date(),
+        IsAcknowledged: false,
+      };
+      const act = sut.insertPing(ping);
+      await expect(act).rejects.toThrow('boom');
+    });
+
+    it('should throw an error if it is a duplicated ping', async () => {
+      const ping = {
+        Title: 'hello, world',
+        CreatedOn: new Date(),
+        IsAcknowledged: false,
+      };
+      repo.listAll = jest.fn().mockResolvedValue([ping]);
+      const act = sut.insertPing(ping);
+      await expect(act).rejects.toThrow(DuplicatedPingError);
+    });
   });
 });
