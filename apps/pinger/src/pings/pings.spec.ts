@@ -7,6 +7,8 @@ import Valkey from 'iovalkey';
 import { IPingsRepository, ValkeyPingsRepository } from './pings.repository';
 import { Ping } from './pings.entity';
 import { DuplicatedPingError, PingsService } from './pings.service';
+import { CreatePingDto, PingsController } from './pings.controller';
+import { BadRequestException } from '@nestjs/common';
 
 describe('PingsEntity', () => {
   it('should have a Title and a Creation Date', () => {
@@ -149,5 +151,56 @@ describe('PingsService', () => {
       const act = sut.insertPing(ping);
       await expect(act).rejects.toThrow(DuplicatedPingError);
     });
+  });
+});
+
+describe('PingsController', () => {
+  let sut: PingsController;
+  let service: PingsService;
+  let repo: IPingsRepository;
+
+  beforeEach(() => {
+    repo = {
+      insert: jest.fn(),
+      listAll: jest.fn(),
+    };
+    service = new PingsService(repo);
+    sut = new PingsController(service);
+  });
+
+  it('should return all pings', async () => {
+    repo.listAll = jest.fn().mockResolvedValue([]);
+    const result = await sut.listAllPings();
+    expect(result).toHaveLength(0);
+  });
+
+  it('should insert a ping', async () => {
+    const ping = {
+      Title: 'hello, world',
+      CreatedOn: new Date(),
+      IsAcknowledged: false,
+    };
+    const dto: CreatePingDto = { title: ping.Title };
+    repo.listAll = jest.fn().mockResolvedValue([]);
+    const act = sut.createPing(dto);
+    await expect(act).resolves.not.toThrow();
+  });
+
+  it('should raise a bad request if it is a duplicated ping', async () => {
+    const ping = {
+      Title: 'hello, world',
+      CreatedOn: new Date(),
+      IsAcknowledged: false,
+    };
+    const dto: CreatePingDto = { title: ping.Title };
+    repo.listAll = jest.fn().mockResolvedValue([ping]);
+    const act = sut.createPing(dto);
+    await expect(act).rejects.toThrow(BadRequestException);
+  });
+
+  it('should raise an internal server error anything other than a duplicated throws', async () => {
+    repo.listAll = jest.fn().mockRejectedValue(new Error('boom'));
+    const act = sut.createPing({ title: 'hello, world' });
+    await expect(act).rejects.toThrow('boom');
   });
 });
