@@ -6,10 +6,12 @@ import {
   Inject,
   Logger,
   Post,
+  UseInterceptors,
 } from '@nestjs/common';
 import { DuplicatedPingError, PingsService } from './pings.service';
 import { IPing } from './pings.entity';
 import { ApiProperty, ApiResponse } from '@nestjs/swagger';
+import { CacheInterceptor } from '@nestjs/cache-manager';
 
 /**
  * DTO for a ping.
@@ -62,6 +64,7 @@ export class CreatePingResponse {
 }
 
 @Controller('pings')
+@UseInterceptors(CacheInterceptor)
 export class PingsController {
   private readonly logger = new Logger(PingsController.name);
 
