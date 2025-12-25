@@ -154,7 +154,7 @@ describe('PingsService', () => {
   });
 });
 
-describe('PingsController', () => {
+describe('PingsController - HTTP', () => {
   let sut: PingsController;
   let service: PingsService;
   let repo: IPingsRepository;
@@ -174,33 +174,35 @@ describe('PingsController', () => {
     expect(result).toHaveLength(0);
   });
 
-  it('should insert a ping', async () => {
-    const ping = {
-      Title: 'hello, world',
-      CreatedOn: new Date(),
-      IsAcknowledged: false,
-    };
-    const dto: CreatePingDto = { title: ping.Title };
-    repo.listAll = jest.fn().mockResolvedValue([]);
-    const act = sut.createPing(dto);
-    await expect(act).resolves.not.toThrow();
-  });
+  describe('inserting', () => {
+    it('should insert a ping', async () => {
+      const ping = {
+        Title: 'hello, world',
+        CreatedOn: new Date(),
+        IsAcknowledged: false,
+      };
+      const dto: CreatePingDto = { title: ping.Title };
+      repo.listAll = jest.fn().mockResolvedValue([]);
+      const act = sut.createPing(dto);
+      await expect(act).resolves.not.toThrow();
+    });
 
-  it('should raise a bad request if it is a duplicated ping', async () => {
-    const ping = {
-      Title: 'hello, world',
-      CreatedOn: new Date(),
-      IsAcknowledged: false,
-    };
-    const dto: CreatePingDto = { title: ping.Title };
-    repo.listAll = jest.fn().mockResolvedValue([ping]);
-    const act = sut.createPing(dto);
-    await expect(act).rejects.toThrow(BadRequestException);
-  });
+    it('should raise a bad request if it is a duplicated ping', async () => {
+      const ping = {
+        Title: 'hello, world',
+        CreatedOn: new Date(),
+        IsAcknowledged: false,
+      };
+      const dto: CreatePingDto = { title: ping.Title };
+      repo.listAll = jest.fn().mockResolvedValue([ping]);
+      const act = sut.createPing(dto);
+      await expect(act).rejects.toThrow(BadRequestException);
+    });
 
-  it('should raise an internal server error anything other than a duplicated throws', async () => {
-    repo.listAll = jest.fn().mockRejectedValue(new Error('boom'));
-    const act = sut.createPing({ title: 'hello, world' });
-    await expect(act).rejects.toThrow('boom');
+    it('should raise an internal server error anything other than a duplicated throws', async () => {
+      repo.listAll = jest.fn().mockRejectedValue(new Error('boom'));
+      const act = sut.createPing({ title: 'hello, world' });
+      await expect(act).rejects.toThrow('boom');
+    });
   });
 });
