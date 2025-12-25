@@ -1,9 +1,11 @@
 import { IPing } from './pings.entity';
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, Provider } from '@nestjs/common';
 import Valkey from 'iovalkey';
 
+export const PING_REPOSITORY_TOKEN = Symbol('IPingsRepository');
+
 export interface IPingsRepository {
-  listAll(): Promise<IPing[]>;
+  listAll(): Promise<ReadonlyArray<IPing>>;
   insert(ping: IPing): Promise<void>;
 }
 
@@ -14,7 +16,7 @@ export class ValkeyPingsRepository implements IPingsRepository {
 
   constructor(private readonly valkey: Valkey) {}
 
-  async listAll(): Promise<IPing[]> {
+  async listAll(): Promise<ReadonlyArray<IPing>> {
     this.logger.debug('listing all pings');
     try {
       const got = await this.valkey.call('JSON.GET', this.PINGS_COLLECTION);
@@ -66,3 +68,8 @@ export class ValkeyPingsRepository implements IPingsRepository {
     }
   }
 }
+
+export const valkeyPingsRepositoryProvider: Provider = {
+  provide: PING_REPOSITORY_TOKEN,
+  useClass: ValkeyPingsRepository,
+};
