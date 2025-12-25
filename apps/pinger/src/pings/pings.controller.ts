@@ -9,9 +9,10 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { DuplicatedPingError, PingsService } from './pings.service';
-import { IPing } from './pings.entity';
+import type { IPing } from './pings.entity';
 import { ApiProperty, ApiResponse } from '@nestjs/swagger';
 import { CacheInterceptor } from '@nestjs/cache-manager';
+import { EventPattern } from '@nestjs/microservices';
 
 /**
  * DTO for a ping.
@@ -101,5 +102,12 @@ export class PingsController {
       this.logger.error('failed to create ping', err);
       throw err;
     }
+  }
+
+  @EventPattern('ping.created')
+  handlePingCreated(data: IPing) {
+    // TODO: this should be a proper handler that does something with the ping ;)
+    this.logger.debug('handling ping created event');
+    this.logger.debug(`received ping: ${data.Title}`);
   }
 }

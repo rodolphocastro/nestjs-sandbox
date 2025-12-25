@@ -1,8 +1,9 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
-
 import type { IPingsRepository } from './pings.repository';
 import { PING_REPOSITORY_TOKEN } from './pings.repository';
-import { IPing } from './pings.entity';
+import type { IPing } from './pings.entity';
+import { ClientProxy } from '@nestjs/microservices';
+import { PINGER_CLIENT } from './pings.module';
 
 /**
  * Error thrown when attempting to insert a duplicated ping.
@@ -26,6 +27,7 @@ export class PingsService {
   constructor(
     @Inject(PING_REPOSITORY_TOKEN)
     private readonly repository: IPingsRepository,
+    @Inject(PINGER_CLIENT) private readonly rabbitMqClient: ClientProxy,
   ) {}
 
   /**
@@ -53,5 +55,7 @@ export class PingsService {
       throw new DuplicatedPingError(ping);
     }
     await this.repository.insert(ping);
+    this.logger.debug('emitting ping to rabbitmq');
+    this.rabbitMqClient.emit('ping.created', ping);
   }
 }

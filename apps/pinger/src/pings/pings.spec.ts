@@ -9,6 +9,7 @@ import { Ping } from './pings.entity';
 import { DuplicatedPingError, PingsService } from './pings.service';
 import { CreatePingDto, PingsController } from './pings.controller';
 import { BadRequestException } from '@nestjs/common';
+import { ClientProxy } from '@nestjs/microservices';
 
 describe('PingsEntity', () => {
   it('should have a Title and a Creation Date', () => {
@@ -93,13 +94,15 @@ describe('PingsRepository', () => {
 describe('PingsService', () => {
   let sut: PingsService;
   let repo: IPingsRepository;
+  let client: ClientProxy;
 
   beforeEach(() => {
     repo = {
       insert: jest.fn(),
       listAll: jest.fn(),
     };
-    sut = new PingsService(repo);
+    client = { emit: jest.fn() } as unknown as ClientProxy;
+    sut = new PingsService(repo, client);
   });
 
   describe('listing', () => {
@@ -158,13 +161,15 @@ describe('PingsController - HTTP', () => {
   let sut: PingsController;
   let service: PingsService;
   let repo: IPingsRepository;
+  let client: ClientProxy;
 
   beforeEach(() => {
     repo = {
       insert: jest.fn(),
       listAll: jest.fn(),
     };
-    service = new PingsService(repo);
+    client = { emit: jest.fn() } as unknown as ClientProxy;
+    service = new PingsService(repo, client);
     sut = new PingsController(service);
   });
 
