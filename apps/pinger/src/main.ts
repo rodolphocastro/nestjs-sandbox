@@ -1,36 +1,18 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './appModule';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import { AsyncMicroserviceOptions, Transport } from '@nestjs/microservices';
-import { ConfigService } from '@nestjs/config';
 import { Logger } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 
 async function bootstrap() {
+  const logger = new Logger('bootstrap');
+  logger.log('initializing pinger');
   const app = await NestFactory.create(AppModule);
 
-  app.connectMicroservice<AsyncMicroserviceOptions>({
-    useFactory: (config: ConfigService) => {
-      const logger = new Logger('rabbitMqInitializer');
-      logger.debug('initializing microservice module with RabbitMq');
-      const rabbitMqUrl =
-        config.get<string>('RABBITMQ_URL') ??
-        'amqp://guest:guest@localhost:5672';
-      return {
-        transport: Transport.RMQ,
-        options: {
-          urls: [rabbitMqUrl],
-          prefetchCount: 2,
-          queue: 'pinger_queue',
-          queueOptions: {
-            durable: false,
-          },
-          persistent: true,
-        },
-      };
-    },
-    inject: [ConfigService],
-  });
+  const targetPort = app.get(ConfigService).get<number>('port') ?? 3000;
+  logger.debug(`target port is ${targetPort}`);
 
+  logger.debug('setting up swagger');
   const config = new DocumentBuilder()
     .setTitle('Pinger')
     .setDescription('Allows for distributed, modern, pinging. WOW!')
@@ -41,8 +23,8 @@ async function bootstrap() {
   const documentFactory = () => SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('docs', app, documentFactory);
 
-  await app.startAllMicroservices();
-  await app.listen(process.env.port ?? 3000);
+  logger.debug(`listening on port ${targetPort}`);
+  await app.listen(targetPort);
 }
 
 bootstrap();

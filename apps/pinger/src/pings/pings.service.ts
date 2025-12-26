@@ -3,7 +3,7 @@ import type { IPingsRepository } from './pings.repository';
 import { PING_REPOSITORY_TOKEN } from './pings.repository';
 import type { IPing } from './pings.entity';
 import { ClientProxy } from '@nestjs/microservices';
-import { PINGER_CLIENT } from './pings.module';
+import { PINGER_CLIENT } from './pings.publisher';
 
 /**
  * Error thrown when attempting to insert a duplicated ping.
@@ -27,7 +27,8 @@ export class PingsService {
   constructor(
     @Inject(PING_REPOSITORY_TOKEN)
     private readonly repository: IPingsRepository,
-    @Inject(PINGER_CLIENT) private readonly rabbitMqClient: ClientProxy,
+    @Inject(PINGER_CLIENT)
+    private readonly rabbitMqClient: ClientProxy,
   ) {}
 
   /**

@@ -103,11 +103,4 @@ export class PingsController {
       throw err;
     }
   }
-
-  @EventPattern('ping.created')
-  handlePingCreated(data: IPing) {
-    // TODO: this should be a proper handler that does something with the ping ;)
-    this.logger.debug('handling ping created event');
-    this.logger.debug(`received ping: ${data.Title}`);
-  }
 }
