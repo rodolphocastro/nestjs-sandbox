@@ -12,7 +12,6 @@ import { DuplicatedPingError, PingsService } from './pings.service';
 import type { IPing } from './pings.entity';
 import { ApiProperty, ApiResponse } from '@nestjs/swagger';
 import { CacheInterceptor } from '@nestjs/cache-manager';
-import { EventPattern } from '@nestjs/microservices';
 
 /**
  * DTO for a ping.
